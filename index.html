@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interactive Graph Algorithm Visualizer built using Vanilla JavaScript and HTML5 Canvas.">
+
+    <title>Graph Algorithm Visualizer</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="icon" href="data:,">
+
+</head>
+
+
+<body>
+
+    <header class="app-header">
+
+        <div class="header-content">
+            <h1>Graph Algorithm Visualizer</h1>
+            <p>Visualize BFS, DFS and Dijkstra's Algorithm</p>
+        </div>
+
+
+        <div class="header-badge">
+            Vanilla JS
+        </div>
+
+    </header>
+
+
+    <main class="app">
+
+        <aside class="sidebar">
+
+            <section class="panel">
+
+                <h2>Graph Settings</h2>
+
+                <!-- Graph Type -->
+
+                <div class="form-group">
+                    <label for="graphType">Graph Type</label>
+                    <select id="graphType">
+                        <option value="undirected">Undirected</option>
+                        <option value="directed">Directed</option>
+                    </select>
+                </div>
+
+
+                <!-- Weighted Graph -->
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="weightedGraph">
+                    <label for="weightedGraph">Weighted Graph</label>
+                </div>
+
+
+                <!-- Edge Weight -->
+
+                <div class="form-group hidden" id="weightGroup">
+                    <label for="edgeWeight">Edge Weight</label>
+                    <input type="number" id="edgeWeight" min="1" value="1">
+                </div>
+
+            </section>
+
+
+            <section class="panel">
+
+                <h2>Algorithm</h2>
+
+                <!-- Algorithm -->
+
+                <div class="form-group">
+                    <label for="algorithm">Algorithm</label>
+                    <select id="algorithm">
+                        <option value="bfs">Breadth-First Search (BFS)</option>
+                        <option value="dfs">Depth-First Search (DFS)</option>
+                        <option value="dijkstra">Dijkstra's Algorithm</option>
+                    </select>
+                </div>
+
+
+                <!-- Start Node -->
+
+                <div class="form-group">
+                    <label for="startNode">Start Node</label>
+                    <select id="startNode">
+                        <option value="">Select Start Node</option>
+                    </select>
+                </div>
+
+
+                <!-- Target Node -->
+
+                <div class="form-group hidden" id="targetGroup">
+                    <label for="targetNode">Target Node</label>
+                    <select id="targetNode">
+                        <option value="">Select Target Node</option>
+                    </select>
+                </div>
+
+
+                <!-- Run Algorithm -->
+
+                <button id="runAlgorithm" class="btn btn-primary">
+                    ▶ Run Algorithm
+                </button>
+
+            </section>
+
+            <section class="panel">
+
+                <h2>Math Graph Lab</h2>
+
+                <p class="math-intro">
+                    Turn a school-level equation into connected graph nodes.
+                    Try <strong>y = x^2 + 5</strong>, <strong>y = sin(x)</strong>, or
+                    <strong>y = 2x + 3</strong>.
+                </p>
+
+                <div class="form-group">
+                    <label for="equationInput">Equation</label>
+                    <input type="text" id="equationInput" value="y = x^2 + 5" placeholder="y = sin(x)">
+                </div>
+
+                <div class="math-range-grid">
+                    <div class="form-group">
+                        <label for="xMinInput">X min</label>
+                        <input type="number" id="xMinInput" value="-5" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label for="xMaxInput">X max</label>
+                        <input type="number" id="xMaxInput" value="5" step="any">
+                    </div>
+                </div>
+
+                <div class="math-range-grid">
+                    <div class="form-group">
+                        <label for="yMinInput">Y min</label>
+                        <input type="number" id="yMinInput" placeholder="Auto" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label for="yMaxInput">Y max</label>
+                        <input type="number" id="yMaxInput" placeholder="Auto" step="any">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="stepInput">Step</label>
+                    <input type="number" id="stepInput" value="0.25" min="0.0001" step="any">
+                </div>
+
+                <button id="generateMathGraph" class="btn btn-primary">Generate Graph</button>
+
+            </section>
+
+
+            <section class="panel">
+
+                <h2>Animation</h2>
+
+                <!-- Speed -->
+
+                <div class="form-group">
+                    <label for="speedSlider">Animation Speed</label>
+                    <div class="speed-control">
+                        <input type="range" id="speedSlider" min="100" max="1500" step="50" value="700">
+                        <span id="speedValue">700 ms</span>
+                    </div>
+                </div>
+
+
+                <!-- Pause / Reset -->
+
+                <div class="button-row">
+                    <button id="pauseResume" class="btn btn-secondary">
+                        Pause
+                    </button>
+
+                    <button id="resetVisualization" class="btn btn-secondary">
+                        Reset
+                    </button>
+                </div>
+
+            </section>
+
+
+            <section class="panel">
+
+                <h2>Graph Controls</h2>
+
+                <button id="clearGraph" class="btn btn-danger">
+                    Clear Graph
+                </button>
+
+                <!-- Instructions -->
+
+                <div class="instructions">
+                    <h3>How to Use</h3>
+                    <p>
+                        <strong>Click:</strong>
+                        Add a node
+                    </p>
+
+                    <p>
+                        <strong>Drag node:</strong>
+                        Move a node
+                    </p>
+
+                    <p>
+                        <strong>Shift + Drag:</strong>
+                        Create an edge
+                    </p>
+                </div>
+
+            </section>
+
+
+            <section class="panel">
+
+                <h2>Status</h2>
+
+                <p id="statusMessage" class="status-message">
+                    Ready to create your graph.
+                </p>
+
+
+                <!-- Graph Statistics -->
+
+                <div class="statistics">
+
+                    <div class="stat-card">
+                        <span>Nodes</span>
+                        <strong id="nodeCount">0</strong>
+                    </div>
+
+                    <div class="stat-card">
+                        <span>Edges</span>
+                        <strong id="edgeCount">0</strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </aside>
+
+
+        <section class="visualizer">
+
+            <div class="canvas-toolbar">
+
+                <div class="toolbar-title">
+                    <span class="toolbar-dot"></span>
+                    Interactive Canvas
+                </div>
+
+                <!-- Legend -->
+
+                <div class="legend">
+
+                    <div class="legend-item">
+                        <span class="legend-dot unvisited"></span>
+                        Unvisited
+                    </div>
+
+                    <div class="legend-item">
+                        <span class="legend-dot visiting"></span>
+                        Visiting
+                    </div>
+
+                    <div class="legend-item">
+                        <span class="legend-dot visited"></span>
+                        Visited
+                    </div>
+
+                    <div class="legend-item">
+                        <span class="legend-dot path"></span>
+                        Final Path
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="canvas-container">
+
+                <canvas id="graphCanvas"></canvas>
+
+                <!-- Empty Canvas Message -->
+
+                <div id="emptyMessage" class="empty-message">
+
+                    <div class="empty-icon">
+                        +
+                    </div>
+
+                    <h2>
+                        Create Your Graph
+                    </h2>
+
+                    <p>
+                        Click anywhere to add your first node
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script type="module" src="./js/main.js"></script>
+
+</body>
+</html>
