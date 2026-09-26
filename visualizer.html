@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Build graphs and explore algorithms with GraphXplore.">
+    <title>GraphXplore | Visualizer</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="workspace-page">
+    <header class="topbar">
+        <a class="brand" href="./index.html"><span class="brand-mark">GX</span><span>GraphXplore</span></a>
+        <nav class="topnav" aria-label="Primary navigation"><a href="./index.html">Home</a><a class="active" href="./visualizer.html">Visualizer</a></nav>
+        <span class="topbar-note">Vanilla JS + Canvas</span>
+    </header>
+    <main class="workspace">
+        <aside class="control-panel">
+            <div class="workspace-heading"><div><p class="eyebrow">Workspace</p><h1>Explore a graph</h1></div><a class="text-link" href="./index.html">Exit</a></div>
+            <div class="mode-tabs" role="tablist" aria-label="Graph mode"><button id="algorithmMode" class="mode-tab active" role="tab">Algorithm graph</button><button id="mathMode" class="mode-tab" role="tab">Math graph</button></div>
+            <section id="algorithmControls" class="control-section">
+                <div class="section-title"><h2>Graph setup</h2><span id="graphModeLabel">Undirected</span></div>
+                <div class="control-grid two"><label>Direction<select id="graphType"><option value="undirected">Undirected</option><option value="directed">Directed</option></select></label><label>Edges<select id="weightedGraph"><option value="no">Unweighted</option><option value="yes">Weighted</option></select></label></div>
+                <label class="compact-label">New edge weight<input id="edgeWeight" type="number" min="1" value="1"></label>
+                <p class="hint">Click empty space for a node. Shift-drag between nodes for an edge.</p>
+                <div class="button-row"><button id="undoAction" class="btn btn-quiet" disabled>Undo</button><button id="clearGraph" class="btn btn-danger">Clear graph</button></div>
+            </section>
+            <section id="edgeEditor" class="control-section hidden"><div class="section-title"><h2>Selected edge</h2><button id="deleteSelection" class="icon-button" title="Delete selection" aria-label="Delete selection">×</button></div><p id="selectedEdgeLabel" class="selection-label">Select an edge on the canvas.</p><label class="compact-label">Custom weight<input id="selectedEdgeWeight" type="number" min="1" step="1"></label><button id="saveEdgeWeight" class="btn btn-primary">Save weight</button></section>
+            <section id="algorithmSection" class="control-section"><div class="section-title"><h2>Run an algorithm</h2><span class="pill">BFS · DFS · Dijkstra</span></div><label class="compact-label">Algorithm<select id="algorithm"><option value="bfs">Breadth-first search</option><option value="dfs">Depth-first search</option><option value="dijkstra">Dijkstra shortest path</option></select></label><div class="control-grid two"><label>Start<select id="startNode"><option value="">Select node</option></select></label><label id="targetGroup">Target<select id="targetNode"><option value="">Optional</option></select></label></div><button id="runAlgorithm" class="btn btn-primary">Run algorithm</button></section>
+            <section class="control-section"><div class="section-title"><h2>Animation</h2><span id="speedValue">600 ms</span></div><label class="range-label"><span>Slow</span><input id="speedSlider" type="range" min="100" max="1500" step="50" value="600"><span>Fast</span></label><div class="button-row"><button id="pauseResume" class="btn btn-quiet" disabled>Pause</button><button id="resetVisualization" class="btn btn-quiet" disabled>Reset</button></div></section>
+            <section id="mathControls" class="control-section hidden"><div class="section-title"><h2>Equation plot</h2><span class="pill">No eval()</span></div><label class="compact-label">Equation<input id="equationInput" type="text" value="y = x^2" placeholder="y = sin(x)"></label><div class="control-grid two"><label>X min<input id="xMinInput" type="number" value="-5" step="any"></label><label>X max<input id="xMaxInput" type="number" value="5" step="any"></label></div><div class="control-grid two"><label>Y min<input id="yMinInput" type="number" placeholder="Auto" step="any"></label><label>Y max<input id="yMaxInput" type="number" placeholder="Auto" step="any"></label></div><label class="compact-label">Sample step<input id="stepInput" type="number" value="0.25" min="0.01" step="any"></label><div class="button-row"><button id="generateMathGraph" class="btn btn-primary">Plot equation</button><button id="createAlgorithmGraph" class="btn btn-quiet">Create algorithm graph</button></div></section>
+            <section class="status-section"><div class="status-line"><span class="status-dot"></span><span id="statusMessage">Ready to create your graph.</span></div><div class="statistics"><div><span>Nodes</span><strong id="nodeCount">0</strong></div><div><span>Edges</span><strong id="edgeCount">0</strong></div></div></section>
+        </aside>
+        <section class="canvas-area"><div class="canvas-header"><div><p class="eyebrow">Live canvas</p><h2 id="canvasTitle">Algorithm workspace</h2></div><div class="legend"><span><i class="legend-dot unvisited"></i>Unvisited</span><span><i class="legend-dot visiting"></i>Visiting</span><span><i class="legend-dot visited"></i>Visited</span><span><i class="legend-dot path"></i>Path</span></div></div><div class="canvas-container"><canvas id="graphCanvas"></canvas><div id="emptyMessage" class="empty-message"><strong>Start with a node</strong><span>Click anywhere in the canvas</span></div></div></section>
+    </main>
+    <script type="module" src="./js/main.js"></script>
+</body>
+</html>
