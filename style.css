@@ -80,6 +80,11 @@ select:focus, input:focus { border-color: var(--green); box-shadow: 0 0 0 2px rg
 .btn-primary:hover { background: var(--green-dark); }
 .btn-quiet { flex: 1; color: var(--green-dark); border-color: #c4d2c8; background: var(--white); }
 .btn-danger { flex: 1; color: var(--red); border-color: #e4c5c5; background: var(--white); }
+#clearSavedGraph { width: 100%; margin-top: 7px; }
+.storage-actions .btn { flex: 1; }
+.storage-actions .btn-primary { width: auto; }
+.storage-toast { position: fixed; z-index: 10; top: 76px; right: 20px; max-width: min(360px, calc(100vw - 32px)); padding: 12px 16px; border: 1px solid #b9d1c2; color: var(--green-dark); background: var(--white); box-shadow: 0 3px 12px rgba(23, 33, 31, .12); font-size: 12px; line-height: 1.4; }
+.storage-toast.error { border-color: #e4c5c5; color: var(--red); }
 .icon-button { border: 0; color: var(--red); background: transparent; cursor: pointer; font-size: 19px; line-height: 1; }
 .range-label { display: flex; align-items: center; gap: 7px; margin-bottom: 12px; color: var(--muted); font-size: 8px; font-weight: 400; }
 .range-label input { margin: 0; accent-color: var(--green); }
@@ -122,6 +127,7 @@ select:focus, input:focus { border-color: var(--green); box-shadow: 0 0 0 2px rg
     .intro-copy h1 { font-size: 50px; }
     .home-footer span:last-child { display: none; }
     .control-panel { padding: 16px 14px; }
+    .storage-toast { top: 72px; right: 12px; }
     .canvas-header { align-items: flex-start; flex-direction: column; padding: 13px 14px; }
     .legend { gap: 8px; }
 }

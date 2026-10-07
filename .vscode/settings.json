@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^node -e 'const http=require\\(\"http\"\\),fs=require\\(\"fs\"\\),path=require\\(\"path\"\\);const root=process\\.cwd\\(\\);http\\.createServer\\(\\(req,res\\)=>\\{let p=path\\.join\\(root,decodeURIComponent\\(new URL\\(req\\.url,\"http://localhost\"\\)\\.pathname\\)\\);if\\(p===root\\+path\\.sep\\)p=path\\.join\\(root,\"index\\.html\"\\);fs\\.readFile\\(p,\\(e,b\\)=>\\{if\\(e\\)\\{res\\.statusCode=404;res\\.end\\(String\\(e\\)\\);return;\\}res\\.setHeader\\(\"Content-Type\",p\\.endsWith\\(\"\\.js\"\\)\\?\"text/javascript\":p\\.endsWith\\(\"\\.css\"\\)\\?\"text/css\":\"text/html\"\\);res\\.end\\(b\\);\\}\\);\\}\\)\\.listen\\(4173,\"127\\.0\\.0\\.1\",\\(\\)=>console\\.log\\(\"Listening on http://127\\.0\\.0\\.1:4173\"\\)\\)'$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

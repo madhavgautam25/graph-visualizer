@@ -1,5 +1,6 @@
 import { Node } from "./Node.js";
 import { createMathFunction } from "./MathGraphParser.js";
+import { Storage } from "./Storage.js";
 
 class UIController {
     constructor(graph, renderer, animationController, interactionController, algorithms) {
@@ -10,6 +11,7 @@ class UIController {
         this.algorithms = algorithms;
         this.history = [];
         this.pendingSnapshot = null;
+        this.storageToastTimer = null;
         this.mode = new URLSearchParams(location.search).get("mode") === "math" ? "math" : "algorithm";
         this.cacheElements();
         this.connectControllers();
@@ -19,8 +21,68 @@ class UIController {
     }
 
     cacheElements() {
-        const ids = ["algorithmMode", "mathMode", "algorithmControls", "mathControls", "algorithmSection", "edgeEditor", "graphType", "graphModeLabel", "weightedGraph", "edgeWeight", "selectedEdgeWeight", "selectedEdgeLabel", "saveEdgeWeight", "deleteSelection", "algorithm", "startNode", "targetNode", "targetGroup", "runAlgorithm", "speedSlider", "speedValue", "pauseResume", "resetVisualization", "clearGraph", "undoAction", "statusMessage", "nodeCount", "edgeCount", "emptyMessage", "canvasTitle", "equationInput", "xMinInput", "xMaxInput", "yMinInput", "yMaxInput", "stepInput", "generateMathGraph", "createAlgorithmGraph"];
-        for (const id of ids) this[id === "createAlgorithmGraph" ? "createAlgorithmGraphButton" : id] = document.getElementById(id);
+
+        const ids = [
+            "algorithmMode",
+            "mathMode",
+            "algorithmControls",
+            "mathControls",
+            "algorithmSection",
+            "edgeEditor",
+
+            "graphType",
+            "graphModeLabel",
+            "weightedGraph",
+            "edgeWeight",
+
+            "selectedEdgeWeight",
+            "selectedEdgeLabel",
+            "saveEdgeWeight",
+            "deleteSelection",
+
+            "algorithm",
+            "startNode",
+            "targetNode",
+            "targetGroup",
+            "runAlgorithm",
+
+            "speedSlider",
+            "speedValue",
+            "pauseResume",
+            "resetVisualization",
+
+            "clearGraph",
+            "undoAction",
+
+            "saveGraph",
+            "loadGraph",
+            "clearSavedGraph",
+
+            "storageToast",
+            "statusMessage",
+            "nodeCount",
+            "edgeCount",
+            "emptyMessage",
+            "canvasTitle",
+
+            "equationInput",
+            "xMinInput",
+            "xMaxInput",
+            "yMinInput",
+            "yMaxInput",
+            "stepInput",
+            "generateMathGraph",
+            "createAlgorithmGraph"
+        ];
+
+        for (const id of ids) {
+
+            this[
+                id === "createAlgorithmGraph"
+                    ? "createAlgorithmGraphButton"
+                    : id
+            ] = document.getElementById(id);
+        }
     }
 
     connectControllers() {
@@ -49,6 +111,18 @@ class UIController {
         this.deleteSelection.addEventListener("click", () => this.interactionController.deleteSelection());
         this.generateMathGraph.addEventListener("click", () => this.generateMathPlot());
         this.createAlgorithmGraphButton.addEventListener("click", () => this.createAlgorithmGraph());
+        this.saveGraph.addEventListener(
+            "click",
+            () => this.saveGraphToStorage()
+        );
+        this.loadGraph.addEventListener(
+            "click",
+            () => this.loadGraphFromStorage()
+        );
+        this.clearSavedGraph.addEventListener(
+            "click",
+            () => this.clearSavedGraphData()
+        );
     }
 
     setMode(mode) {
@@ -74,21 +148,122 @@ class UIController {
         this.pendingSnapshot = null;
         this.undoAction.disabled = this.history.length === 0;
     }
+
+
     restore(snapshot) {
+        Storage.validate(snapshot);
+
         this.graph.clear();
-        this.graph.directed = snapshot.directed;
-        this.graph.weighted = snapshot.weighted;
-        for (const item of snapshot.nodes) this.graph.addNode(new Node(item.id, item.x, item.y));
-        for (const edge of snapshot.edges) this.graph.addEdge(edge.from, edge.to, edge.weight);
+
+        this.graph.directed =
+            snapshot.directed;
+
+        this.graph.weighted =
+            snapshot.weighted;
+
+        for (const item of snapshot.nodes) {
+
+            if (!this.graph.addNode(new Node(item.id, item.x, item.y))) {
+                throw new Error(`Could not restore node ${item.id}.`);
+            }
+        }
+
+        for (const edge of snapshot.edges) {
+            if (!this.graph.addEdge(edge.from, edge.to, edge.weight)) {
+                throw new Error(`Could not restore edge ${edge.from} to ${edge.to}.`);
+            }
+        }
+
+        this.graphType.value =
+            this.graph.directed
+                ? "directed"
+                : "undirected";
+
+        this.weightedGraph.value =
+            this.graph.weighted
+                ? "yes"
+                : "no";
+
         this.interactionController.resetCounter();
+
         this.renderer.clearMathPlot();
+
         this.interactionController.selectedEdge = null;
+
         this.interactionController.selectedNode = null;
-        this.showSelection(null, null);
+
+        this.showSelection(
+            null,
+            null
+        );
+
         this.updateUI();
+
         this.renderer.draw();
     }
+
     undo() { const snapshot = this.history.pop(); if (!snapshot) return; this.restore(snapshot); this.setStatus("Last graph change undone."); this.undoAction.disabled = this.history.length === 0; }
+
+    saveGraphToStorage() {
+        try {
+            Storage.save(this.graph);
+            this.setStatus("Graph saved in this browser.");
+            this.showStorageToast("Graph saved in this browser.");
+        } catch (error) {
+            console.error("Could not save graph:", error);
+            this.setStatus("Could not save the graph. Check browser storage availability.");
+        }
+    }
+
+    loadGraphFromStorage() {
+        if (this.isRunning()) {
+            this.setStatus("Wait for the animation to finish before loading a graph.");
+            return;
+        }
+
+        try {
+            const data = Storage.load();
+            if (!data) {
+                this.setStatus("No saved graph found.");
+                return;
+            }
+
+            this.restore(data);
+            this.history = [];
+            this.pendingSnapshot = null;
+            this.undoAction.disabled = true;
+
+            this.graphType.value =
+                this.graph.directed
+                    ? "directed"
+                    : "undirected";
+
+            this.weightedGraph.value =
+                this.graph.weighted
+                    ? "yes"
+                    : "no";
+
+            this.updateUI();
+            this.setStatus("Saved graph loaded from this browser.");
+        } catch (error) {
+            this.setStatus(`Could not load the saved graph: ${error.message}`);
+        }
+    }
+
+    clearSavedGraphData() {
+        try {
+            if (!Storage.hasSavedGraph()) {
+                this.setStatus("No saved graph found.");
+                return;
+            }
+            Storage.clear();
+            this.setStatus("Saved graph removed from this browser.");
+            this.showStorageToast("Saved graph removed from this browser.");
+        } catch (error) {
+            console.error("Could not clear saved graph:", error);
+            this.setStatus("Could not clear saved graph data from browser storage.");
+        }
+    }
 
     showSelection(edge, node) {
         for (const item of this.graph.edges) item.selected = item === edge;
@@ -108,6 +283,15 @@ class UIController {
     rebuildAdjacency() { this.graph.adjacencyList.clear(); for (const node of this.graph.nodes.values()) this.graph.adjacencyList.set(node.id, []); for (const edge of this.graph.edges) { this.graph.adjacencyList.get(edge.from.id).push({ node: edge.to, weight: edge.weight, edge }); if (!this.graph.directed) this.graph.adjacencyList.get(edge.to.id).push({ node: edge.from, weight: edge.weight, edge }); } }
     actionMessage(action) { return ({ "node-created": "Node added.", "node-moved": "Node moved.", "edge-created": "Edge added.", "node-deleted": "Node deleted.", "edge-deleted": "Edge deleted." })[action] || "Graph updated."; }
     setStatus(message) { this.statusMessage.textContent = message; }
+    showStorageToast(message, isError = false) {
+        window.clearTimeout(this.storageToastTimer);
+        this.storageToast.textContent = message;
+        this.storageToast.classList.toggle("error", isError);
+        this.storageToast.classList.remove("hidden");
+        this.storageToastTimer = window.setTimeout(() => {
+            this.storageToast.classList.add("hidden");
+        }, 3000);
+    }
     isRunning() { return this.animationController.isRunning; }
 
     updateUI() {
@@ -159,7 +343,10 @@ class UIController {
         if (!Number.isFinite(yMin) || !Number.isFinite(yMax) || yMax <= yMin) throw new Error("Use valid Y limits");
         return { samples, xMin, xMax, yMin, yMax, margin: 42 };
     }
+
     generateMathPlot() { try { const plot = this.sampleEquation(); this.renderer.setMathPlot(plot); this.renderer.draw(); this.setStatus(`Plotted ${this.equationInput.value.trim()}.`); } catch (error) { this.setStatus(`Invalid equation: ${error.message}.`); } }
+
+
     createAlgorithmGraph() {
         try {
             const plot = this.sampleEquation();

@@ -18,8 +18,15 @@ class Graph {
 
 
     addNode(node) {
+
+        if (this.nodes.has(node.id)) {
+            return false;
+        }
+
         this.nodes.set(node.id, node);
         this.adjacencyList.set(node.id, []);
+
+        return true;
     }
 
 
@@ -32,7 +39,7 @@ class Graph {
         // Remove all edges connected to this node
         this.edges = this.edges.filter(edge => {
             return edge.from.id !== nodeId &&
-                   edge.to.id !== nodeId;
+                edge.to.id !== nodeId;
         });
 
         this.nodes.delete(nodeId);

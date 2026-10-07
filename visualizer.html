@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="./style.css">
 </head>
 <body class="workspace-page">
+    <div id="storageToast" class="storage-toast hidden" role="status" aria-live="polite" aria-atomic="true"></div>
     <header class="topbar">
         <a class="brand" href="./index.html"><span class="brand-mark">GX</span><span>GraphXplore</span></a>
         <nav class="topnav" aria-label="Primary navigation"><a href="./index.html">Home</a><a class="active" href="./visualizer.html">Visualizer</a></nav>
@@ -24,6 +25,40 @@
                 <p class="hint">Click empty space for a node. Shift-drag between nodes for an edge.</p>
                 <div class="button-row"><button id="undoAction" class="btn btn-quiet" disabled>Undo</button><button id="clearGraph" class="btn btn-danger">Clear graph</button></div>
             </section>
+
+            <section class="control-section">
+
+                <div class="section-title">
+                    <h2>Graph storage</h2>
+                    <span class="pill">localStorage</span>
+                </div>
+
+                <div class="button-row storage-actions">
+                    <button
+                        id="saveGraph"
+                        class="btn btn-primary">
+                        Save graph
+                    </button>
+
+                    <button
+                        id="loadGraph"
+                        class="btn btn-quiet">
+                        Load graph
+                    </button>
+                </div>
+
+                <button
+                    id="clearSavedGraph"
+                    class="btn btn-danger">
+                    Clear saved graph
+                </button>
+
+                <p class="hint">
+                    Saved graphs stay in this browser after refresh. Clear saved graph removes that copy.
+                </p>
+
+            </section>
+
             <section id="edgeEditor" class="control-section hidden"><div class="section-title"><h2>Selected edge</h2><button id="deleteSelection" class="icon-button" title="Delete selection" aria-label="Delete selection">×</button></div><p id="selectedEdgeLabel" class="selection-label">Select an edge on the canvas.</p><label class="compact-label">Custom weight<input id="selectedEdgeWeight" type="number" min="1" step="1"></label><button id="saveEdgeWeight" class="btn btn-primary">Save weight</button></section>
             <section id="algorithmSection" class="control-section"><div class="section-title"><h2>Run an algorithm</h2><span class="pill">BFS · DFS · Dijkstra</span></div><label class="compact-label">Algorithm<select id="algorithm"><option value="bfs">Breadth-first search</option><option value="dfs">Depth-first search</option><option value="dijkstra">Dijkstra shortest path</option></select></label><div class="control-grid two"><label>Start<select id="startNode"><option value="">Select node</option></select></label><label id="targetGroup">Target<select id="targetNode"><option value="">Optional</option></select></label></div><button id="runAlgorithm" class="btn btn-primary">Run algorithm</button></section>
             <section class="control-section"><div class="section-title"><h2>Animation</h2><span id="speedValue">600 ms</span></div><label class="range-label"><span>Slow</span><input id="speedSlider" type="range" min="100" max="1500" step="50" value="600"><span>Fast</span></label><div class="button-row"><button id="pauseResume" class="btn btn-quiet" disabled>Pause</button><button id="resetVisualization" class="btn btn-quiet" disabled>Reset</button></div></section>
