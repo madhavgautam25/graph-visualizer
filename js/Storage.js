@@ -3,6 +3,11 @@ class Storage {
     static key = "graphxplore-graph";
 
     static save(graph) {
+        const data = Storage.serialize(graph);
+        localStorage.setItem(Storage.key, JSON.stringify(data));
+    }
+
+    static serialize(graph) {
         const data = {
             directed: graph.directed,
             weighted: graph.weighted,
@@ -21,7 +26,7 @@ class Storage {
         };
 
         Storage.validate(data);
-        localStorage.setItem(Storage.key, JSON.stringify(data));
+        return data;
     }
 
 

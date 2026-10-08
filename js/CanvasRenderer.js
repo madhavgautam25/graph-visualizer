@@ -144,7 +144,7 @@ class CanvasRenderer {
         const yTick = this.getTickStep(plot.yMax - plot.yMin);
 
         this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = "#1e293b";
+        this.ctx.strokeStyle = "#dce2db";
 
         for (let value = Math.ceil(plot.xMin / xTick) * xTick;
             value <= plot.xMax + xTick * 0.01;
@@ -164,8 +164,8 @@ class CanvasRenderer {
             this.drawAxisLabel(this.formatAxisValue(value), left - 8, y, "right");
         }
 
-        this.ctx.strokeStyle = "#94a3b8";
-        this.ctx.lineWidth = 1.5;
+        this.ctx.strokeStyle = "#68736e";
+        this.ctx.lineWidth = 1.25;
 
         if (plot.xMin <= 0 && plot.xMax >= 0) {
             const yAxisX = xToCanvas(0);
@@ -189,7 +189,7 @@ class CanvasRenderer {
         const size = 7;
         const angle = Math.atan2(directionY, directionX);
 
-        this.ctx.fillStyle = "#cbd5e1";
+        this.ctx.fillStyle = "#68736e";
         this.ctx.beginPath();
         this.ctx.moveTo(x, y);
         this.ctx.lineTo(
@@ -216,7 +216,7 @@ class CanvasRenderer {
 
     drawAxisLabel(text, x, y, align) {
 
-        this.ctx.fillStyle = "#94a3b8";
+        this.ctx.fillStyle = "#526159";
         this.ctx.font = "10px Arial";
         this.ctx.textAlign = align;
         this.ctx.textBaseline = "middle";

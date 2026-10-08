@@ -14,15 +14,75 @@ class UIController {
         this.storageToastTimer = null;
         this.mode = new URLSearchParams(location.search).get("mode") === "math" ? "math" : "algorithm";
         this.cacheElements();
+        this.setupSidebarResizer();
         this.connectControllers();
         this.setupEvents();
         this.setMode(this.mode);
         this.updateUI();
     }
 
+    setupSidebarResizer() {
+        const minimum = 250;
+        const preferredMaximum = 480;
+        const workspace = this.controlPanel.parentElement;
+        let sidebarWidth = 300;
+
+        const getMaximum = () => Math.max(
+            minimum,
+            Math.min(preferredMaximum, workspace.clientWidth - 328)
+        );
+        const setWidth = width => {
+            sidebarWidth = Math.min(getMaximum(), Math.max(minimum, width));
+            workspace.style.setProperty("--sidebar-width", `${sidebarWidth}px`);
+            this.sidebarResizer.setAttribute("aria-valuemax", String(getMaximum()));
+            this.sidebarResizer.setAttribute("aria-valuenow", String(sidebarWidth));
+            this.renderer.resize();
+        };
+
+        this.sidebarResizer.addEventListener("pointerdown", event => {
+            if (event.button !== 0) return;
+            event.preventDefault();
+            this.sidebarResizer.setPointerCapture(event.pointerId);
+            workspace.classList.add("resizing-sidebar");
+            setWidth(event.clientX - workspace.getBoundingClientRect().left);
+        });
+        this.sidebarResizer.addEventListener("pointermove", event => {
+            if (this.sidebarResizer.hasPointerCapture(event.pointerId)) {
+                setWidth(event.clientX - workspace.getBoundingClientRect().left);
+            }
+        });
+        const stopResize = event => {
+            if (this.sidebarResizer.hasPointerCapture(event.pointerId)) {
+                this.sidebarResizer.releasePointerCapture(event.pointerId);
+            }
+            workspace.classList.remove("resizing-sidebar");
+        };
+        this.sidebarResizer.addEventListener("pointerup", stopResize);
+        this.sidebarResizer.addEventListener("pointercancel", stopResize);
+        this.sidebarResizer.addEventListener("keydown", event => {
+            if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+                event.preventDefault();
+                setWidth(sidebarWidth + (event.key === "ArrowRight" ? 16 : -16));
+            } else if (event.key === "Home") {
+                event.preventDefault();
+                setWidth(minimum);
+            } else if (event.key === "End") {
+                event.preventDefault();
+                setWidth(getMaximum());
+            }
+        });
+        window.addEventListener("resize", () => {
+            if (window.matchMedia("(min-width: 821px)").matches) {
+                setWidth(sidebarWidth);
+            }
+        });
+    }
+
     cacheElements() {
 
         const ids = [
+            "controlPanel",
+            "sidebarResizer",
             "algorithmMode",
             "mathMode",
             "algorithmControls",
@@ -57,6 +117,9 @@ class UIController {
             "saveGraph",
             "loadGraph",
             "clearSavedGraph",
+            "exportGraphJson",
+            "importGraphJson",
+            "importGraphFile",
 
             "storageToast",
             "statusMessage",
@@ -98,13 +161,13 @@ class UIController {
     setupEvents() {
         this.algorithmMode.addEventListener("click", () => this.setMode("algorithm"));
         this.mathMode.addEventListener("click", () => this.setMode("math"));
-        this.graphType.addEventListener("change", () => { this.graph.directed = this.graphType.value === "directed"; this.rebuildAdjacency(); this.renderer.draw(); this.setStatus(`${this.graph.directed ? "Directed" : "Undirected"} graph selected.`); });
+        this.graphType.addEventListener("change", () => { this.graph.directed = this.graphType.value === "directed"; this.rebuildAdjacency(); this.renderer.draw(); this.setStatus(`${this.graph.directed ? "Directed" : "Undirected"}.`); });
         this.weightedGraph.addEventListener("change", () => { this.graph.weighted = this.weightedGraph.value === "yes"; this.renderer.draw(); });
         this.algorithm.addEventListener("change", () => { if (this.algorithm.value === "dijkstra") { this.graph.weighted = true; this.weightedGraph.value = "yes"; } this.updateUI(); });
         this.runAlgorithm.addEventListener("click", () => this.runSelectedAlgorithm());
         this.speedSlider.addEventListener("input", () => { this.speedValue.textContent = `${this.speedSlider.value} ms`; this.animationController.setSpeed(this.speedSlider.value); });
         this.pauseResume.addEventListener("click", () => { this.animationController.togglePause(); this.pauseResume.textContent = this.animationController.isPaused ? "Resume" : "Pause"; });
-        this.resetVisualization.addEventListener("click", () => { this.animationController.reset(); this.setStatus("Visualization reset."); this.updateUI(); });
+        this.resetVisualization.addEventListener("click", () => { this.animationController.reset(); this.setStatus("Reset."); this.updateUI(); });
         this.clearGraph.addEventListener("click", () => this.clearGraphData());
         this.undoAction.addEventListener("click", () => this.undo());
         this.saveEdgeWeight.addEventListener("click", () => this.saveSelectedWeight());
@@ -123,19 +186,25 @@ class UIController {
             "click",
             () => this.clearSavedGraphData()
         );
+        this.exportGraphJson.addEventListener("click", () => this.exportGraphToJson());
+        this.importGraphJson.addEventListener("click", () => this.importGraphFile.click());
+        this.importGraphFile.addEventListener("change", event => this.importGraphFromFile(event));
     }
 
     setMode(mode) {
         this.mode = mode;
         const math = mode === "math";
+        this.controlPanel.classList.toggle("math-mode", math);
+        document.body.classList.toggle("math-mode", math);
         this.algorithmMode.classList.toggle("active", !math);
         this.mathMode.classList.toggle("active", math);
         this.algorithmControls.classList.toggle("hidden", math);
         this.algorithmSection.classList.toggle("hidden", math);
         this.mathControls.classList.toggle("hidden", !math);
-        this.canvasTitle.textContent = math ? "Mathematical graph" : "Algorithm workspace";
+        this.canvasTitle.textContent = math ? "Math graph" : "Algorithm graph";
         if (!math) this.renderer.draw();
-        this.setStatus(math ? "Plot an equation to begin." : "Ready to create your graph.");
+        this.updateUI();
+        this.setStatus(math ? "Enter an equation." : "Ready.");
     }
 
     snapshot() {
@@ -202,29 +271,74 @@ class UIController {
         this.renderer.draw();
     }
 
-    undo() { const snapshot = this.history.pop(); if (!snapshot) return; this.restore(snapshot); this.setStatus("Last graph change undone."); this.undoAction.disabled = this.history.length === 0; }
+    undo() { const snapshot = this.history.pop(); if (!snapshot) return; this.restore(snapshot); this.setStatus("Undo complete."); this.undoAction.disabled = this.history.length === 0; }
 
     saveGraphToStorage() {
         try {
             Storage.save(this.graph);
-            this.setStatus("Graph saved in this browser.");
-            this.showStorageToast("Graph saved in this browser.");
+            this.setStatus("Graph saved.");
+            this.showStorageToast("Graph saved.");
         } catch (error) {
             console.error("Could not save graph:", error);
-            this.setStatus("Could not save the graph. Check browser storage availability.");
+            this.setStatus("Could not save. Check browser storage.");
+        }
+    }
+
+    exportGraphToJson() {
+        try {
+            const json = JSON.stringify(Storage.serialize(this.graph), null, 2);
+            const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "graphxplore-graph.json";
+            document.body.append(link);
+            link.click();
+            link.remove();
+            window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+            this.setStatus("JSON exported.");
+        } catch (error) {
+            console.error("Could not export graph JSON:", error);
+            this.setStatus("Could not export graph.");
+        }
+    }
+
+    async importGraphFromFile(event) {
+        const input = event.currentTarget;
+        const [file] = input.files;
+        if (!file) return;
+
+        if (this.isRunning()) {
+            this.setStatus("Wait for animation to finish.");
+            input.value = "";
+            return;
+        }
+
+        try {
+            const data = JSON.parse(await file.text());
+            Storage.validate(data);
+            this.restore(data);
+            this.history = [];
+            this.pendingSnapshot = null;
+            this.undoAction.disabled = true;
+            this.setMode("algorithm");
+            this.setStatus("JSON imported.");
+        } catch (error) {
+            this.setStatus("Invalid graph JSON.");
+        } finally {
+            input.value = "";
         }
     }
 
     loadGraphFromStorage() {
         if (this.isRunning()) {
-            this.setStatus("Wait for the animation to finish before loading a graph.");
+            this.setStatus("Wait for animation to finish.");
             return;
         }
 
         try {
             const data = Storage.load();
             if (!data) {
-                this.setStatus("No saved graph found.");
+                this.setStatus("No saved graph.");
                 return;
             }
 
@@ -244,7 +358,7 @@ class UIController {
                     : "no";
 
             this.updateUI();
-            this.setStatus("Saved graph loaded from this browser.");
+            this.setStatus("Graph loaded.");
         } catch (error) {
             this.setStatus(`Could not load the saved graph: ${error.message}`);
         }
@@ -253,15 +367,15 @@ class UIController {
     clearSavedGraphData() {
         try {
             if (!Storage.hasSavedGraph()) {
-                this.setStatus("No saved graph found.");
+                this.setStatus("No saved graph.");
                 return;
             }
             Storage.clear();
-            this.setStatus("Saved graph removed from this browser.");
-            this.showStorageToast("Saved graph removed from this browser.");
+            this.setStatus("Saved graph cleared.");
+            this.showStorageToast("Saved graph cleared.");
         } catch (error) {
             console.error("Could not clear saved graph:", error);
-            this.setStatus("Could not clear saved graph data from browser storage.");
+            this.setStatus("Could not clear saved graph.");
         }
     }
 
